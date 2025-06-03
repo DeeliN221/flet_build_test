@@ -130,23 +130,34 @@ jobs:
       - name: 创建 Release 并上传产物
         uses: softprops/action-gh-release@v2
         with:
-          # GITHUB_TOKEN 会自动提供
-          # tag_name: ${{ github.ref_name }} # 使用触发工作流的标签名
-          # name: Release ${{ github.ref_name }} # Release 的标题
-          # body: | # Release 的描述内容，可以自定义
-          #   自动构建的 Flet 应用产物。
-          #   - Web 应用
-          #   - Android APK
-          #   - macOS 应用
-          #   - iOS 应用 (IPA)
-          #   - Windows 应用
+          tag_name: ${{ github.ref_name }} # 使用触发工作流的标签名
+          name: Release ${{ github.ref_name }} # Release 的标题
+          body: | # Release 的描述内容，可以自定义
+            自动构建的 Flet 应用产物。
+            - Web 应用
+            - Android APK
+            - macOS 应用
+            - iOS 应用 (IPA)
+            - Windows 应用
           draft: false # 是否为草稿 Release
           prerelease: ${{ contains(github.ref_name, '-beta') }} # 如果标签包含 -beta，则标记为预发布
           files: | # 要上传的文件列表，支持通配符
-            artifacts/flet-web-app/*
-            artifacts/flet-apk-app/* # 通常 APK 是单个文件，例如 app-release.apk
-            artifacts/flet-macos-app/* # macOS 通常是 .app 目录或 .dmg 文件
-            artifacts/flet-ios-app/* # iOS 通常是 .ipa 文件
-            artifacts/flet-windows-app/* # Windows 通常是 .exe 或 .msi，或者一个包含 .exe 的目录
+            # Android APK
+            artifacts/build-web-apk-linux/*.apk
+            
+            # iOS 应用
+            artifacts/build-macos-ios/*.ipa
+            
+            # macOS 应用 (适配不同打包格式)
+            artifacts/build-macos-ios/*.app
+            artifacts/build-macos-ios/*.dmg
+            artifacts/build-macos-ios/*.zip
+            
+            # Windows 应用
+            artifacts/build-windows/*.exe
+            artifacts/build-windows/*.msi
+            
+            # Web 应用
+            artifacts/build-web-apk-linux/web/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
