@@ -44,18 +44,18 @@ jobs:
         with:
           name: flet-apk-app # Artifact 名称
           # APK 文件的典型路径，可能需要根据 Flet 版本和项目结构进行调整
-          path: build/app/outputs/apk/release/*.apk
+          path: build/apk
 
-      - name: 构建 Flet Linux 桌面应用
-        run: pixi run flet build linux # 使用 Pixi 运行 Flet Linux 桌面构建命令
-        env:
-          PYTHONUTF8: 1
+      # - name: 构建 Flet Linux 桌面应用
+      #   run: pixi run flet build linux # 使用 Pixi 运行 Flet Linux 桌面构建命令
+      #   env:
+      #     PYTHONUTF8: 1
           
-      - name: 上传 Linux 桌面构建产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: flet-linux-desktop-app
-          path: build/linux # Linux 桌面构建输出路径
+      # - name: 上传 Linux 桌面构建产物
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: flet-linux-desktop-app
+      #     path: build/linux # Linux 桌面构建输出路径
 
   # 构建 macOS 和 iOS 应用 (在 macOS 上)
   build-macos-ios:
@@ -81,7 +81,7 @@ jobs:
           path: build/macos # macOS 构建输出路径
 
       - name: 构建 Flet iOS 应用
-        run: pixi run flet build ios # 使用 Pixi 运行 Flet iOS 构建命令
+        run: pixi run flet build ipa # 使用 Pixi 运行 Flet iOS 构建命令
         env:
           PYTHONUTF8: 1
           
@@ -89,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-ios-app
-          path: build/ios # iOS 构建输出路径 (此路径可能需要根据 Flet 实际输出调整)
+          path: build/ipa # iOS 构建输出路径 (此路径可能需要根据 Flet 实际输出调整)
 
   # 构建 Windows 应用 (在 Windows 上)
   build-windows:
