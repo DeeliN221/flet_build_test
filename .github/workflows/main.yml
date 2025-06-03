@@ -28,11 +28,8 @@ jobs:
           curl -fsSL https://pixi.sh/install.sh | bash # 使用 Pixi 官方安装脚本
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH # 将 Pixi 添加到 PATH 环境变量
 
-      - name: Pixi 环境同步
-        run: pixi shell # 同步 Pixi 环境，安装项目依赖
-
       - name: 构建 Flet Web 应用
-        run: flet build web # 使用 Pixi 运行 Flet Web 构建命令
+        run: pixi run flet build web # 使用 Pixi 运行 Flet Web 构建命令
 
       - name: 上传 Web 构建产物
         uses: actions/upload-artifact@v4 # 上传构建好的 Web 文件
@@ -41,7 +38,7 @@ jobs:
           path: build/web # Web 构建输出路径
 
       - name: 构建 Flet APK 应用
-        run: flet build apk -v # 使用 Pixi 运行 Flet APK 构建命令，并显示详细信息
+        run: pixi run flet build apk -v # 使用 Pixi 运行 Flet APK 构建命令，并显示详细信息
 
       - name: 上传 APK 构建产物
         uses: actions/upload-artifact@v4 # 上传构建好的 APK 文件
@@ -76,11 +73,8 @@ jobs:
           curl -fsSL https://pixi.sh/install.sh | bash
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH
 
-      - name: Pixi 环境同步
-        run: pixi shell
-
       - name: 构建 Flet macOS 应用
-        run: flet build macos # 使用 Pixi 运行 Flet macOS 构建命令
+        run: pixi run flet build macos # 使用 Pixi 运行 Flet macOS 构建命令
 
       - name: 上传 macOS 构建产物
         uses: actions/upload-artifact@v4
@@ -89,7 +83,7 @@ jobs:
           path: build/macos # macOS 构建输出路径
 
       - name: 构建 Flet iOS 应用
-        run: flet build ios # 使用 Pixi 运行 Flet iOS 构建命令
+        run: pixi run flet build ios # 使用 Pixi 运行 Flet iOS 构建命令
 
       - name: 上传 iOS 构建产物
         uses: actions/upload-artifact@v4
@@ -119,11 +113,8 @@ jobs:
           echo "C:\pixi-bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append # 将 Pixi 目录添加到 PATH
         shell: pwsh # 使用 PowerShell shell 执行命令
 
-      - name: Pixi 环境同步
-        run: pixi shell
-
       - name: 构建 Flet Windows 应用
-        run: flet build windows # 使用 Pixi 运行 Flet Windows 构建命令
+        run: pixi run flet build windows # 使用 Pixi 运行 Flet Windows 构建命令
 
       - name: 上传 Windows 构建产物
         uses: actions/upload-artifact@v4
