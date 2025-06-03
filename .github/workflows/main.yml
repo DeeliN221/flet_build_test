@@ -13,9 +13,6 @@ jobs:
   # 构建 Web 和 Android APK (在 Linux 上)
   build-web-apk-linux:
     runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
-    outputs: # 定义输出，方便 release job 知道产物路径
-      apk_path: build/apk
-      web_path: build/web
     steps:
       - name: 检出代码
         uses: actions/checkout@v4 # 检出仓库代码
@@ -34,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-web-app
-          path: ${{ steps.build-web-apk-linux.outputs.web_path }} # 使用上面定义的输出
+          path: build/web
 
       - name: 构建 Flet APK 应用
         run: pixi run flet build apk -v
@@ -45,9 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-apk-app
-          path: ${{ steps.build-web-apk-linux.outputs.apk_path }} # 使用上面定义的输出
-          # APK 文件的典型路径，可能需要根据 Flet 版本和项目结构进行调整
-          # 通常 Flet 会将 APK 放在 build/apk/app-release.apk 或类似路径
+          path: build/apk
 
   # 构建 macOS 和 iOS 应用 (在 macOS 上)
   build-macos-ios:
@@ -73,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-macos-app
-          path: ${{ steps.build-macos-ios.outputs.macos_path }}
+          path: build/macos
 
       - name: 构建 Flet iOS 应用
         run: pixi run flet build ipa
@@ -84,9 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-ios-app
-          path: ${{ steps.build-macos-ios.outputs.ios_path }}
-          # IPA 文件的典型路径，可能需要根据 Flet 版本和项目结构进行调整
-          # 例如 build/ipa/your_app_name.ipa
+          path: build/ipa
 
   # 构建 Windows 应用 (在 Windows 上)
   build-windows:
@@ -114,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flet-windows-app
-          path: ${{ steps.build-windows.outputs.windows_path }}
+          path: build/windows
 
   # 发布 Release
   release:
