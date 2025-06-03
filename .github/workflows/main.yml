@@ -1,99 +1,152 @@
-name: Build Flet App for All Platforms
+# 工作流名称
+name: Flet Cross-Platform Build
 
+# 触发工作流的事件
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main # 当代码推送到 main 分支时触发
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main # 当向 main 分支发起拉取请求时触发
 
 jobs:
-  build_linux:
-    runs-on: ubuntu-latest
-    name: Build Linux/APK/Web
+  # 构建 Web 和 Android APK (在 Linux 上)
+  build-web-apk-linux:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install 'flet[all]'
-          # 安装其他必要的依赖
-          # pip install -r requirements.txt
-          
-      - name: Build APK
-        run: flet build apk -v
-        
-      - name: Build Web
-        run: flet build web -v
-        
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: linux-builds
-          path: |
-            build/
-            dist/
+      - name: 检出代码
+        uses: actions/checkout@v4 # 检出仓库代码
 
-  build_macos:
-    needs: build_linux
-    runs-on: macos-latest
-    name: Build iOS/macOS
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5 # 设置 Python
         with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install 'flet[all]'
-          
-      - name: Build iOS
-        run: flet build ios -v
-        
-      - name: Build macOS
-        run: flet build macos -v
-        
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-builds
-          path: |
-            build/
-            dist/
+          python-version: '3.10' # 指定 Python 版本
 
-  build_windows:
-    needs: build_linux
-    runs-on: windows-latest
-    name: Build Windows
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
+      - name: 安装 Pixi (Linux)
         run: |
-          python -m pip install --upgrade pip
-          pip install 'flet[all]'
-          
-      - name: Build Windows
-        run: flet build windows -v
-        
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+          curl -fsSL https://pixi.sh/install.sh | bash # 使用 Pixi 官方安装脚本
+          echo "$HOME/.pixi/bin" >> $GITHUB_PATH # 将 Pixi 添加到 PATH 环境变量
+
+      - name: Pixi 环境同步
+        run: pixi sync # 同步 Pixi 环境，安装项目依赖
+
+      - name: 构建 Flet Web 应用
+        run: pixi run flet build web # 使用 Pixi 运行 Flet Web 构建命令
+
+      - name: 上传 Web 构建产物
+        uses: actions/upload-artifact@v4 # 上传构建好的 Web 文件
         with:
-          name: windows-builds
-          path: |
-            build/
-            dist/
+          name: flet-web-app # Artifact 名称
+          path: build/web # Web 构建输出路径
+
+      - name: 构建 Flet APK 应用
+        run: pixi run flet build apk -v # 使用 Pixi 运行 Flet APK 构建命令，并显示详细信息
+
+      - name: 上传 APK 构建产物
+        uses: actions/upload-artifact@v4 # 上传构建好的 APK 文件
+        with:
+          name: flet-apk-app # Artifact 名称
+          # APK 文件的典型路径，可能需要根据 Flet 版本和项目结构进行调整
+          path: build/app/outputs/apk/release/*.apk
+
+  # 构建 Linux 桌面应用 (在 Linux 上)
+  build-linux-desktop:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装 Pixi (Linux)
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | bash
+          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Pixi 环境同步
+        run: pixi sync
+
+      - name: 构建 Flet Linux 桌面应用
+        run: pixi run flet build linux # 使用 Pixi 运行 Flet Linux 桌面构建命令
+
+      - name: 上传 Linux 桌面构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-linux-desktop-app
+          path: build/linux # Linux 桌面构建输出路径
+
+  # 构建 macOS 和 iOS 应用 (在 macOS 上)
+  build-macos-ios:
+    runs-on: macos-latest # 使用最新的 macOS 运行器
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装 Pixi (macOS)
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | bash
+          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Pixi 环境同步
+        run: pixi sync
+
+      - name: 构建 Flet macOS 应用
+        run: pixi run flet build macos # 使用 Pixi 运行 Flet macOS 构建命令
+
+      - name: 上传 macOS 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-macos-app
+          path: build/macos # macOS 构建输出路径
+
+      - name: 构建 Flet iOS 应用
+        run: pixi run flet build ios # 使用 Pixi 运行 Flet iOS 构建命令
+
+      - name: 上传 iOS 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-ios-app
+          path: build/ios # iOS 构建输出路径 (此路径可能需要根据 Flet 实际输出调整)
+
+  # 构建 Windows 应用 (在 Windows 上)
+  build-windows:
+    runs-on: windows-latest # 使用最新的 Windows 运行器
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          architecture: 'x64' # 指定 64 位架构，对 Windows 很重要
+
+      - name: 安装 Pixi (Windows)
+        # 从 GitHub Releases 下载最新版本的 Pixi 可执行文件
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/prefix-dev/pixi/releases/latest/download/pixi-x86_64-pc-windows-msvc.exe" -OutFile "pixi.exe"
+          mkdir C:\pixi-bin # 创建一个目录来存放 Pixi
+          Move-Item pixi.exe C:\pixi-bin\pixi.exe # 将 Pixi 移动到新目录
+          echo "C:\pixi-bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append # 将 Pixi 目录添加到 PATH
+        shell: pwsh # 使用 PowerShell shell 执行命令
+
+      - name: Pixi 环境同步
+        run: pixi sync
+
+      - name: 构建 Flet Windows 应用
+        run: pixi run flet build windows # 使用 Pixi 运行 Flet Windows 构建命令
+
+      - name: 上传 Windows 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-windows-app
+          path: build/windows # Windows 构建输出路径
