@@ -1,0 +1,18 @@
+[workspace]
+authors = ["zzl <zzl@workPC>"]
+channels = ["conda-forge"]
+name = "flet_example"
+platforms = ["linux-64", "win-64"]
+version = "0.1.0"
+
+[pypi-options]
+index-url = "https://mirrors.ustc.edu.cn/pypi/web/simple"
+extra-index-urls = ["https://pypi.org/simple"]
+
+[tasks]
+
+[dependencies]
+python = ">=3.13.3,<3.14"
+
+[pypi-dependencies]
+flet = { version = ">=0.28.3, <0.29", extras = ["all"] }
