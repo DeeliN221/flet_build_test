@@ -2,7 +2,7 @@
 authors = ["zzl <zzl@workPC>"]
 channels = ["conda-forge"]
 name = "flet_example"
-platforms = ["linux-64", "win-64"]
+platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
 
 [pypi-options]
