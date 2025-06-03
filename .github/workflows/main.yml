@@ -18,16 +18,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4 # 检出仓库代码
 
-      - name: 设置 Python 环境
-        uses: actions/setup-python@v5 # 设置 Python
-        with:
-          python-version: '3.10' # 指定 Python 版本
-
       - name: 安装 Pixi (Linux)
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash # 使用 Pixi 官方安装脚本
-          echo "$HOME/.pixi/bin" >> $GITHUB_PATH # 将 Pixi 添加到 PATH 环境变量
-
+          echo "$HOME/.pixi/bin" >> $GITHUB_PATH # 将 Pixi 添加到 PATH 环境
+          
+      - name: 设置 UTF-8 环境变量
+        env:
+          PYTHONUTF8: 1
+          
       - name: 构建 Flet Web 应用
         run: pixi run flet build web # 使用 Pixi 运行 Flet Web 构建命令
 
@@ -62,17 +61,16 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
-
-      - name: 设置 Python 环境
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
+        
       - name: 安装 Pixi (macOS)
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH
-
+          
+      - name: 设置 UTF-8 环境变量
+        env:
+          PYTHONUTF8: 1
+          
       - name: 构建 Flet macOS 应用
         run: pixi run flet build macos # 使用 Pixi 运行 Flet macOS 构建命令
 
@@ -98,12 +96,6 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Python 环境
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          architecture: 'x64' # 指定 64 位架构，对 Windows 很重要
-
       - name: 安装 Pixi (Windows)
         # 从 GitHub Releases 下载最新版本的 Pixi 可执行文件
         run: |
@@ -112,7 +104,11 @@ jobs:
           Move-Item pixi.exe C:\pixi-bin\pixi.exe # 将 Pixi 移动到新目录
           echo "C:\pixi-bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append # 将 Pixi 目录添加到 PATH
         shell: pwsh # 使用 PowerShell shell 执行命令
-
+        
+      - name: 设置 UTF-8 环境变量
+        env:
+          PYTHONUTF8: 1
+  
       - name: 构建 Flet Windows 应用
         run: pixi run flet build windows # 使用 Pixi 运行 Flet Windows 构建命令
 
