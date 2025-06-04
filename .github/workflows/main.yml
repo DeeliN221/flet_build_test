@@ -91,7 +91,7 @@ jobs:
           fi
         
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
           path: artifacts/flet-ios-app/Runner.ipa
@@ -115,7 +115,7 @@ jobs:
         env:
           PYTHONUTF8: 1
           
-      - name: uoload win
+      - name: upload win
         uses: actions/upload-artifact@v4
         with:
           name: flet-windows-app
