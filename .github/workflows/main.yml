@@ -76,19 +76,21 @@ jobs:
       - name: Export IPA from .xcarchive
         run: |
           cd build/ipa
-          xcodebuild -exportArchive \
-            -archivePath Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath . \
-            -allowProvisioningUpdates
+          zip -r ../flet-ios-app.zip .
+          # TODO: need apple developer id for plist
+          # xcodebuild -exportArchive \
+          #   -archivePath Runner.xcarchive \
+          #   -exportOptionsPlist ExportOptions.plist \
+          #   -exportPath . \
+          #   -allowProvisioningUpdates
           
-          ls -la
-          if [ -f "Runner.ipa" ]; then
-            echo "IPA file successfully generated: Runner.ipa"
-          else
-            echo "Error: IPA file not found!"
-            exit 1
-          fi
+          # ls -la
+          # if [ -f "Runner.ipa" ]; then
+          #   echo "IPA file successfully generated: Runner.ipa"
+          # else
+          #   echo "Error: IPA file not found!"
+          #   exit 1
+          # fi
         
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -154,7 +156,7 @@ jobs:
             artifacts/flet-apk-app/app-release.apk.sha1
             
             # iOS 应用
-            artifacts/flet-ios-app/*.ipa
+            artifacts/flet-ios-app.zip
             
             # macOS 应用 (适配不同打包格式)
             artifacts/flet-macos-app/*.app
