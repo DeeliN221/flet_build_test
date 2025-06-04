@@ -1,96 +1,108 @@
-# 工作流名称
 name: Flet Cross-Platform Build & Release
 
-# 触发工作流的事件
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+' # 匹配类似 v1.0.0, v2.1.5 的标签
-      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+' # 如果你需要发布 beta 版本，例如 v1.0.0-beta.1
+      - 'v[0-9]+.[0-9]+.[0-9]+' # v1.0.0
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+' # v1.0.0-beta.1
   workflow_dispatch:
 
 jobs:
-  # 构建 Web 和 Android APK (在 Linux 上)
   build-web-apk-linux:
-    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
+    runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4 # 检出仓库代码
+      - name: checkout
+        uses: actions/checkout@v4
 
-      - name: 安装 Pixi (Linux)
+      - name: get Pixi
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH
 
-      - name: 构建 Flet Web 应用
+      - name: build web
         run: pixi run flet build web
         env:
           PYTHONUTF8: 1
-
-      - name: 上传 Web 构建产物
+          
+      - name: Zip Web App
+        run: |
+          cd artifacts/flet-web-app
+          zip -r ../flet-web-app.zip .
+          
+      - name: upload web
         uses: actions/upload-artifact@v4
         with:
           name: flet-web-app
-          path: build/web
+          path: build/flet-web-app.zip
 
-      - name: 构建 Flet APK 应用
+      - name: build apk
         run: pixi run flet build apk -v
         env:
           PYTHONUTF8: 1
           
-      - name: 上传 APK 构建产物
+      - name: upload APK
         uses: actions/upload-artifact@v4
         with:
           name: flet-apk-app
           path: build/apk
 
-  # 构建 macOS 和 iOS 应用 (在 macOS 上)
   build-macos-ios:
-    runs-on: macos-latest # 使用最新的 macOS 运行器
-    outputs:
-      macos_path: build/macos
-      ios_path: build/ipa # 假设 IPA 文件在 build/ipa 目录下
+    runs-on: macos-latest
     steps:
-      - name: 检出代码
+      - name: checkout
         uses: actions/checkout@v4
         
-      - name: 安装 Pixi (macOS)
+      - name: get pixi
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH
           
-      - name: 构建 Flet macOS 应用
+      - name: build macos
         run: pixi run flet build macos
         env:
           PYTHONUTF8: 1
           
-      - name: 上传 macOS 构建产物
+      - name: upload macos
         uses: actions/upload-artifact@v4
         with:
           name: flet-macos-app
           path: build/macos
 
-      - name: 构建 Flet iOS 应用
+      - name: build ipa
         run: pixi run flet build ipa
         env:
           PYTHONUTF8: 1
           
-      - name: 上传 iOS 构建产物
-        uses: actions/upload-artifact@v4
+      - name: Export IPA from .xcarchive
+        run: |
+          cd artifacts/flet-ios-app
+          xcodebuild -exportArchive \
+            -archivePath Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath . \
+            -allowProvisioningUpdates
+          
+          ls -la
+          if [ -f "Runner.ipa" ]; then
+            echo "IPA file successfully generated: Runner.ipa"
+          else
+            echo "Error: IPA file not found!"
+            exit 1
+          fi
+        
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: flet-ios-app
-          path: build/ipa
+          name: ios-ipa
+          path: artifacts/flet-ios-app/Runner.ipa
 
-  # 构建 Windows 应用 (在 Windows 上)
   build-windows:
-    runs-on: windows-latest # 使用最新的 Windows 运行器
-    outputs:
-      windows_path: build/windows
+    runs-on: windows-latest
     steps:
-      - name: 检出代码
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: 安装 Pixi (Windows)
+      - name: get pixi
         run: |
           Invoke-WebRequest -Uri "https://github.com/prefix-dev/pixi/releases/latest/download/pixi-x86_64-pc-windows-msvc.exe" -OutFile "pixi.exe"
           New-Item -ItemType Directory -Force -Path "C:\pixi-bin" | Out-Null
@@ -98,66 +110,62 @@ jobs:
           echo "C:\pixi-bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: pwsh
     
-      - name: 构建 Flet Windows 应用
+      - name: build win
         run: pixi run flet build windows
         env:
           PYTHONUTF8: 1
           
-      - name: 上传 Windows 构建产物
+      - name: uoload win
         uses: actions/upload-artifact@v4
         with:
           name: flet-windows-app
           path: build/windows
 
-  # 发布 Release
   release:
     runs-on: ubuntu-latest
-    # 确保所有构建任务完成后再执行 release
     needs: [build-web-apk-linux, build-macos-ios, build-windows]
     permissions:
-      contents: write # 需要写入权限来创建 Release 和上传附件
+      contents: write
     steps:
-      - name: 下载所有构建产物
+      - name: download all
         uses: actions/download-artifact@v4
         with:
-          # path 指定下载到哪个目录，默认会以 artifact name 创建子目录
           path: artifacts 
-          # 如果不指定 name，则会下载所有 artifacts
 
-      - name: 列出下载的产物 (调试用)
-        run: ls -R artifacts
+      - name: show file tree
+        run: find . -maxdepth 2 -type d -ls
 
-      - name: 创建 Release 并上传产物
+      - name: publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }} # 使用触发工作流的标签名
-          name: Release ${{ github.ref_name }} # Release 的标题
-          body: | # Release 的描述内容，可以自定义
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
             自动构建的 Flet 应用产物。
             - Web 应用
             - Android APK
             - macOS 应用
             - iOS 应用 (IPA)
             - Windows 应用
-          draft: false # 是否为草稿 Release
-          prerelease: ${{ contains(github.ref_name, '-beta') }} # 如果标签包含 -beta，则标记为预发布
-          files: | # 要上传的文件列表，支持通配符
+          prerelease: ${{ contains(github.ref_name, '-beta') }}
+          files: |
             # Android APK
-            artifacts/build-web-apk-linux/*.apk
+            artifacts/flet-apk-app/app-release.apk
+            artifacts/flet-apk-app/app-release.apk.sha1
             
             # iOS 应用
-            artifacts/build-macos-ios/*.ipa
+            artifacts/flet-ios-app/*.ipa
             
             # macOS 应用 (适配不同打包格式)
-            artifacts/build-macos-ios/*.app
-            artifacts/build-macos-ios/*.dmg
-            artifacts/build-macos-ios/*.zip
+            artifacts/flet-macos-app/*.app
+            artifacts/flet-macos-app/*.dmg
+            artifacts/flet-macos-app/*.zip
             
             # Windows 应用
-            artifacts/build-windows/*.exe
-            artifacts/build-windows/*.msi
+            artifacts/flet-windows-app/*.exe
+            artifacts/flet-windows-app/*.msi
             
             # Web 应用
-            artifacts/build-web-apk-linux/web/**
+            artifacts/flet-web-app/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
